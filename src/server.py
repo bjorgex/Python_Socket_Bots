@@ -26,7 +26,7 @@ forms
 from socket import *
 from threading import Thread
 from time import ctime
-
+from chatrecord import ChatRecord
 
 class ClientHandler(Thread):
     """Handles a client request."""
@@ -59,19 +59,9 @@ ADDRESS = (HOST, PORT)
 BUFSIZE = 1024
 
 record = ChatRecords()
-# socket.AF_INET is the internet address familiy for IPv4
-# socket.STOCK_STREAM is the sicket type for TCP - which is the protocol that will be used to transport messages
+
 server = socket(AF_INET, SOCK_STREAM)
-# Bind() assigns an IP address and prt number to a socket instance.
-# Assign an IP address here corresponding to your adapter (check with ipconfig in your host terminal)
-# Port numver 0 to 1023 are reserved for common TCP/IP applications and are what we call well-known ports.
 server.bind(ADDRESS)
-# Listen() is used below to mark our socket instances as a passice socket - a socket that will be used
-# to accept incoming connection requests with accept() method.
-# You can pass inn a number to this method to specify a maximum lenght of a queue of pending
-# connections.
-# Example: If you call serverSocket.listen(2) and 3 connection requests come in before you
-# call accept(), then 1 will be dropped.
 server.listen(5)
 
 # The server now waits for connections from clients
