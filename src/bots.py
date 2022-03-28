@@ -29,10 +29,10 @@ def chuck(a, b=None):
     return "I don't care!"
 
 
-action = random.choice(["work", "play", "eat", "cry", "sleep", "fight"])
-
+"""
 print("\nMe: Do you guys want to {}? \n".format(action))
 print("Alice: {}".format(alice(action)))
 print("Bob: {}".format(bob(action)))
 print("Dora: {}".format(dora(action)[0]))
 print("Chuck: {}".format(chuck(action)))
+"""

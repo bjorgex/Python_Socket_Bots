@@ -19,6 +19,8 @@ messages (optional)
 
 from socket import *
 import bots
+
+
 HOST = 'localhost'
 PORT = 5000
 ADDRESS = (HOST, PORT)
@@ -33,14 +35,20 @@ c.send(name.encode('utf-8'))
 
 while True:
     record = c.recv(BUFSIZE)    # Recieves record list from host
-    record = record.decode('utf-8') # Decodes record list
+    print("Recieved record list from server")
+    record = record.decode('utf-8')     # Decodes record list
+    action = c.recv(BUFSIZE)
+    print("Recieved action from server")
     if not record:  # If there is no data in record list do this
         print('Server disconnected')
         break
     print(record)   # Prints record list
-    # Recieve a respons from server/host
+    ####################################
 
-    message = input('> ') # bot response
+    # Recieve a respons from server/host
+    action = action.decode('utf-8')
+    message = bots.alice(action)
+
     if not message:
         print('Server disconnected')
         break

@@ -27,6 +27,7 @@ from socket import *
 from threading import Thread
 from time import ctime
 from chatrecord import ChatRecord
+import random
 
 
 class ClientHandler(Thread):
@@ -38,14 +39,19 @@ class ClientHandler(Thread):
         self._record = record
 
     def run(self):
-        msg = "Welcome to the chat room!".encode('utf-8')   # Encodes the welcome message
+        msg = "Welcome to the chat room!".encode('utf-8')  # Encodes the welcome message
+        msg += "\nMe: Do you guys want to {}? \n".format(action).encode('utf-8')
         self._client.send(msg)  # Sends welcome msg
-
-        self._name = self._client.recv(BUFSIZE) # Recieves name of bot
-        rec_msg = str(self._record).encode('utf-8') # Encodes the record list
-        self._client.send(rec_msg)  # Sends the record list to client
+        self._name = self._client.recv(BUFSIZE)  # Recieve name of bot
+        print("Server recieved name")
+        record_msg = str(self._record).encode('utf-8')  # Encodes the record list
+        self._client.send(record_msg)  # Sends the record list to client
+        print("Server sent record list to client")
+        self._client.send(action.encode('utf-8'))
+        print("Sent action to client")
         while True:
             message = self._client.recv(BUFSIZE)
+            print("Recieved message from client")
             if not message:
                 print("Client disconnected")
                 connected_clients.remove(client)
@@ -65,15 +71,15 @@ BUFSIZE = 1024
 record = ChatRecord()
 server = socket(AF_INET, SOCK_STREAM)
 server.bind(ADDRESS)
+action = random.choice(["work", "play", "eat", "cry", "sleep", "fight"])
 server.listen(5)
 
 connected_clients = []
 # The server now waits for connections from clients
 # and hands sockets off to clients handlers
 while True:
-
     print('Waiting for connections...')
-    print("There are " + str(len(connected_clients)) + "Connected clients")
+    print("There are " + str(len(connected_clients)) + " connected clients")
     client, address = server.accept()
     connected_clients.append(client)
     print('... connected from: ', address)
