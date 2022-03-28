@@ -26,20 +26,22 @@ BUFSIZE = 1024
 
 c = socket(AF_INET, SOCK_STREAM)   # TCP socket for IPv4
 c.connect(ADDRESS)
-print(c.recv(BUFSIZE))
-name = input("Enter your name")
-c.send(name)
+rec_msg = c.recv(BUFSIZE)
+print(rec_msg.decode('utf-8'))
+name = input('Enter your name: ')
+c.send(name.encode('utf-8'))
 
 while True:
     record = c.recv(BUFSIZE)
+    record = record.decode('utf-8')
     if not record:
-        print("Server disconnected")
+        print('Server disconnected')
         break
     print(record)
-    message = input("> ")
+    message = input('> ')
     if not message:
-        print("Server disconnected")
+        print('Server disconnected')
         break
-    c.send(message + "\n")
+    send_msg = message + '\n'
+    c.send(send_msg.encode('utf-8'))
 c.close()
-

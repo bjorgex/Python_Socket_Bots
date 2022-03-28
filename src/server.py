@@ -28,18 +28,21 @@ from threading import Thread
 from time import ctime
 from chatrecord import ChatRecord
 
+
 class ClientHandler(Thread):
     """Handles a client request."""
 
-    def __init__(self, client, recoord):
+    def __init__(self, client, record):
         Thread.__init__(self)
         self._client = client
         self._record = record
 
     def run(self):
-        self._client.send("Welcome to the chat room!")
+        msg = "Welcome to the chat room!".encode('utf-8')
+        self._client.send(msg)
         self._name = self._client.recv(BUFSIZE)
-        self._client.send(str(self._record))
+        rec_msg = str(self._record).encode('utf-8')
+        self._client.send(rec_msg)
         while True:
             message = self._client.recv(BUFSIZE)
             if not message:
@@ -47,19 +50,17 @@ class ClientHandler(Thread):
                 self._client.close()
                 break
             else:
-                message = self._name + " " + \
-                          ctime() + "\n" + message
+                message = self._name.decode('utf-8') + ' ' + ctime() + '\n' + message.decode('utf-8')
                 self._record.add(message)
-                self._client.send(str(self._record))
+                self._client.send(str(self._record).encode('utf-8'))
 
 
-HOST = "localhost"
+HOST = 'localhost'
 PORT = 5000
 ADDRESS = (HOST, PORT)
 BUFSIZE = 1024
 
-record = ChatRecords()
-
+record = ChatRecord()
 server = socket(AF_INET, SOCK_STREAM)
 server.bind(ADDRESS)
 server.listen(5)
@@ -67,23 +68,8 @@ server.listen(5)
 # The server now waits for connections from clients
 # and hands sockets off to clients handlers
 while True:
-    print("Waiting for connections...")
+    print('Waiting for connections...')
     client, address = server.accept()
-    print("... connected from:", address)
+    print('... connected from: ', address)
     handler = ClientHandler(client, record)
     handler.start()
-
-
-class ChatRecord(object):
-
-    def __init__(self):
-        self.data = []
-
-    def add(self, s):
-        self.data.append(s)
-
-    def __str__(self):
-        if len(self.data) == 0:
-            return "No messages yet!"
-        else:
-            return "\n".join(self.data)
