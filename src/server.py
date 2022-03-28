@@ -4,7 +4,7 @@
 1. Accept any connection. You can expect all connections to be a bot, e.g. that
 they will not be the first to speak, but that they will always respond. This gives you the option
 of waiting for them. You can also decide to make your program more robust by reading from
-clients in parallel, or if you're a real pro, use select or poll to makethe clients non-blocking.
+clients in parallel, or if you're a real pro, use select or poll to make the clients non-blocking.
 But keep in mind: it's better to have something simple that works than something
 sophisticated that doesn't.
 2. Initiate a round of dialogue by suggesting an action. Send the suggestion to
@@ -38,15 +38,17 @@ class ClientHandler(Thread):
         self._record = record
 
     def run(self):
-        msg = "Welcome to the chat room!".encode('utf-8')
-        self._client.send(msg)
-        self._name = self._client.recv(BUFSIZE)
-        rec_msg = str(self._record).encode('utf-8')
-        self._client.send(rec_msg)
+        msg = "Welcome to the chat room!".encode('utf-8')   # Encodes the welcome message
+        self._client.send(msg)  # Sends welcome msg
+
+        self._name = self._client.recv(BUFSIZE) # Recieves name of bot
+        rec_msg = str(self._record).encode('utf-8') # Encodes the record list
+        self._client.send(rec_msg)  # Sends the record list to client
         while True:
             message = self._client.recv(BUFSIZE)
             if not message:
                 print("Client disconnected")
+                connected_clients.remove(client)
                 self._client.close()
                 break
             else:
@@ -65,11 +67,15 @@ server = socket(AF_INET, SOCK_STREAM)
 server.bind(ADDRESS)
 server.listen(5)
 
+connected_clients = []
 # The server now waits for connections from clients
 # and hands sockets off to clients handlers
 while True:
+
     print('Waiting for connections...')
+    print("There are " + str(len(connected_clients)) + "Connected clients")
     client, address = server.accept()
+    connected_clients.append(client)
     print('... connected from: ', address)
     handler = ClientHandler(client, record)
     handler.start()
