@@ -19,6 +19,7 @@ messages (optional)
 
 from socket import *
 import bots
+import helpmethods
 
 
 HOST = 'localhost'
@@ -27,12 +28,22 @@ ADDRESS = (HOST, PORT)
 BUFSIZE = 1024
 
 c = socket(AF_INET, SOCK_STREAM)   # TCP socket for IPv4
-c.connect(ADDRESS)
-rec_msg = c.recv(BUFSIZE)
-print(rec_msg.decode('utf-8'))
-name = input('Enter your name: ')
-c.send(name.encode('utf-8'))
 
+"""Connects to host server and added in a list of connected clients"""
+c.connect(ADDRESS)
+print("Waiting for more clients to connect to the server,\nbefore starting communication with each-other")
+
+"""valEstablishedConnection validates connection to server and sends confirmation smg"""
+helpmethods.getSocketMsg(c, BUFSIZE)  # Get confirmation msg
+
+"""ClientHandler() function gets called"""
+helpmethods.getSocketMsg(c, BUFSIZE)  # Get welcome msg
+
+"""Pick which bot you want to use by name"""
+name = input('Enter your name: ')
+
+"""Not tested code under"""
+"""
 while True:
     record = c.recv(BUFSIZE)    # Recieves record list from host
     print("Recieved record list from server")
@@ -54,4 +65,5 @@ while True:
         break
     send_msg = message + '\n'
     c.send(send_msg.encode('utf-8'))
+    """
 c.close()

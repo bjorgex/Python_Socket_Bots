@@ -29,6 +29,14 @@ def chuck(a, b=None):
     return "I don't care!"
 
 
+def __action__():
+    _input = input("Do you want to input your own action? (Yes/No): ")
+    if _input == "Yes":
+        _input = input("Write an action like for example 'work' for bots the to discuss: ")
+        return _input
+    return random.choice(["work", "play", "eat", "cry", "sleep", "fight"])
+
+
 """
 print("\nMe: Do you guys want to {}? \n".format(action))
 print("Alice: {}".format(alice(action)))
