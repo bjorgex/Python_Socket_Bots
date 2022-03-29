@@ -19,51 +19,40 @@ messages (optional)
 
 from socket import *
 import bots
-import helpmethods
-
+from helpmethods import *
 
 HOST = 'localhost'
 PORT = 5000
 ADDRESS = (HOST, PORT)
 BUFSIZE = 1024
 
-c = socket(AF_INET, SOCK_STREAM)   # TCP socket for IPv4
+c = socket(AF_INET, SOCK_STREAM)  # TCP socket for IPv4
 
 """Connects to host server and added in a list of connected clients"""
 c.connect(ADDRESS)
-print("Waiting for more clients to connect to the server,\nbefore starting communication with each-other")
+# ClientHandler() function gets called
+getSocketMsg(c, BUFSIZE)  # Get welcome msg
+name = input(b'Enter your name: ')  # Pick which bot you want to use by name
+sendSocketMsg(c, name)              # Sends name to host
+print("Waiting for record list")
 
-"""valEstablishedConnection validates connection to server and sends confirmation smg"""
-helpmethods.getSocketMsg(c, BUFSIZE)  # Get confirmation msg
-
-"""ClientHandler() function gets called"""
-helpmethods.getSocketMsg(c, BUFSIZE)  # Get welcome msg
-
-"""Pick which bot you want to use by name"""
-name = input('Enter your name: ')
-
-"""Not tested code under"""
-"""
 while True:
-    record = c.recv(BUFSIZE)    # Recieves record list from host
+    record = c.recv(BUFSIZE)                    # Recieves record list from host
     print("Recieved record list from server")
-    record = record.decode('utf-8')     # Decodes record list
-    action = c.recv(BUFSIZE)
-    print("Recieved action from server")
+    record = record.decode('utf-8')             # Decodes record list
+
     if not record:  # If there is no data in record list do this
         print('Server disconnected')
         break
     print(record)   # Prints record list
-    ####################################
 
-    # Recieve a respons from server/host
-    action = action.decode('utf-8')
-    message = bots.alice(action)
+    _action = c.recv(BUFSIZE).decode('utf-8')   # Recieves and decodes action
+    message = bots.alice(_action)
 
     if not message:
         print('Server disconnected')
         break
     send_msg = message + '\n'
     c.send(send_msg.encode('utf-8'))
-    """
+
 c.close()
