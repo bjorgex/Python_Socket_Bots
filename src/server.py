@@ -12,7 +12,8 @@ each of your connected clients. The action can be random, provided as user input
 3. All responses should be sent back out to all clients except the one who sent it.
 4. Maintain a list of connected clients.
 -If you want, you can let new connections wait until you've completed one round of dialogue.
--A good program will check if clients are still connected before trying to interact with them. If they're not, or if you decide that they're
+-A good program will check if clients are still connected before trying to interact with them.
+If they're not, or if you decide that they're
 taking too long to respond, you can remove them from the list of connections.
 5. You are free to decide when and how to disconnect the clients (you can
 even kick them out if they misbehave) and how to gracefully terminate the program.
@@ -22,7 +23,6 @@ or other users can interact with the bots and make the dialogue more interesting
 options, but your defaults should work well without user interaction. Don't make them fill out
 forms
 """
-import time
 from socket import *
 from threading import Thread
 from time import ctime
@@ -32,8 +32,12 @@ from helpmethods import *
 import random
 import signal
 import time
-import os
 import sys
+
+"""Traps"""
+
+
+# Handles ctrl + c interrupts
 
 def handler(signum, frame):
     res = input("Ctrl-c was pressed. Do you really want to exit? y/n ")
@@ -43,6 +47,10 @@ def handler(signum, frame):
 
 signal.signal(signal.SIGINT, handler)
 
+"""ClientHandler class"""
+
+
+# Start threads for clients
 
 class ClientHandler(Thread):
     """Handles a client request."""
@@ -54,10 +62,10 @@ class ClientHandler(Thread):
         self._record = record
 
     def run(self):
-        msg = "Welcome to the chat room!"                       # welcome msg
-        sendSocketMsg(self._client, msg)                        # Sends welcome msg
+        msg = "Welcome to the chat room!"  # welcome msg
+        sendSocketMsg(self._client, msg)  # Sends welcome msg
 
-        self._name = getSocketMsg(self._client, BUFSIZE)        # Gets client name and decodes it
+        self._name = getSocketMsg(self._client, BUFSIZE)  # Gets client name and decodes it
         if not self._name:
             print("Client disconnected fomr handler")
             print("Remove client from connected clients")
@@ -65,15 +73,16 @@ class ClientHandler(Thread):
             self._client.close()
             exit()
 
-        print("Client name received: {}".format(self._name))    # Prints to client name to console
-        clientNamesReceived.append(self._name)                  # When enough clients names have been added, this will break the loop in server.py
-        record_msg = str(self._record).encode('utf-8')          # Encodes the record list
-        self._client.send(record_msg)                           # Sends the record list to client
+        print("Client name received: {}".format(self._name))  # Prints to client name to console
+        clientNamesReceived.append(
+            self._name)  # When enough clients names have been added, this will break the loop in server.py
+        record_msg = str(self._record).encode('utf-8')  # Encodes the record list
+        self._client.send(record_msg)  # Sends the record list to client
         print("Server sent record list to client")
         #########################################
         while True:
             """Waits for response from client"""
-            _response = getSocketMsg(self._client, BUFSIZE)               # Receives message from bot
+            _response = getSocketMsg(self._client, BUFSIZE)  # Receives message from bot
             print("Response from {}: {}".format(self._name, _response))
             if not _response:
                 print("Client disconnected")
@@ -130,7 +139,8 @@ while True:
         print("Retrieving bot names")
         while len(clientNamesReceived) != cRoof:
             """Loops around until client names are received"""
-            print("Need to retrieve", cRoof - len(clientNamesReceived), "more bot names")  # This should be removed or changed for finished code
+            print("Need to retrieve", cRoof - len(clientNamesReceived),
+                  "more bot names")  # This should be removed or changed for finished code
             time.sleep(5)
             if not len(clientNamesReceived) < cRoof:
                 break
@@ -174,4 +184,3 @@ while True:
                 sys.exit("Quit chat bot")
             else:
                 print("Error: Wrong input, try again!")
-
