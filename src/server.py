@@ -50,11 +50,10 @@ class ClientHandler(Thread):
             print("Client disconnected")
             connected_clients.remove(self._client)
             self._client.close()
-
             exit()
 
         print("Client name received: {}".format(self._name))    # Prints to client name to console
-        clientNamesRecieved.append(self._name)                  # When enough clients names have been added, this will break the loop in server.py
+        clientNamesReceived.append(self._name)                  # When enough clients names have been added, this will break the loop in server.py
         record_msg = str(self._record).encode('utf-8')          # Encodes the record list
         self._client.send(record_msg)                           # Sends the record list to client
         print("Server sent record list to client")
@@ -62,14 +61,14 @@ class ClientHandler(Thread):
         while True:
             """Waits for response from client"""
             _response = getSocketMsg(self._client, BUFSIZE)               # Receives message from bot
-            print("Dont og past")
+            print("Response from {}: {}".format(self._name, _response))
             if not _response:
                 print("Client disconnected")
                 connected_clients.remove(self._client)
                 self._client.close()
                 break
             else:
-                _response = self._name + ' ' + ctime() + '\n' + _response
+                _response = self._name + ' ' + ctime() + ': \n' + _response
                 self._record.add(_response)
                 self._client.send(str(self._record).encode('utf-8'))
 
@@ -82,11 +81,18 @@ BUFSIZE = 1024
 record = ChatRecord()
 server = socket(AF_INET, SOCK_STREAM)
 server.bind(ADDRESS)
-cRoof = 1
-server.listen(2)
+cRoof = 0
+while True:
+    cRoof = int(input("How many clients has to connect before the chat room host suggests something?: "))
+    if isinstance(cRoof, int):
+        break
+    else:
+        print("Error: Wrong input input. Only integers are accepted")
+
+server.listen()
 
 connected_clients = []  # List of all connected clients
-clientNamesRecieved = []
+clientNamesReceived = []
 _round = 0
 """
 The server now waits for connections from clients,
@@ -95,53 +101,56 @@ and hands sockets off to clients handlers
 while True:
     # Gather cRoof clients
     print('Waiting for connections...')
-    print("There are " + str(len(connected_clients)) + " connected clients")
+    print("There is " + str(len(connected_clients)) + " connected clients")
     client, address = server.accept()
     print('... connected from: ', address)
     handler = ClientHandler(client, record)
     handler.start()
+    time.sleep(2)
     # Appends client name to connected clients
     connected_clients.append(client)
     if len(connected_clients) == cRoof:
-        print("cRoof reached \n")
+        print("Enough clients have joined the chat room \n")
         while True:
             """Wait for all clients to have sent their name"""
-            while len(clientNamesRecieved) != cRoof:
-                """Loops around until clients are recieved"""
-                print("Need to receive ", cRoof - len(clientNamesRecieved), " more bot names")
-                time.sleep(10)
-                if len(clientNamesRecieved) != cRoof:
+            print("Retrieving bot names")
+            while len(clientNamesReceived) != cRoof:
+                """Loops around until clients are received"""
+                print("Need to retrieve", cRoof - len(clientNamesReceived), "more bot names")  # This should be removed or changed for finished code
+                time.sleep(5)
+                if not len(clientNamesReceived) < cRoof:
                     break
-            if len(clientNamesRecieved) != cRoof:
-                break
+            ##if len(clientNamesReceived) != cRoof:
+            ##    break
 
-            print("All names recieved")
+            print("\nAll names received")
             print("Sending suggestion")
-            # Picks either one or two actions, if only one is choosen, _action2 will = null
+            # Picks either one or two actions, if only one is chosen, _action2 will = null
             _rand = random.choice([1, 2])
 
             if _rand == 1:
                 _action1 = __action__(1)
                 _action2 = "None"
-                msg = "Would any of you want to {}?".format(_action1)
-                print("Action: {}".format(_action1))
+                _suggestion = "Would any of you want to {}?".format(_action1)
+                print("Action1: {}\nAction2: None".format(_action1))
             else:
                 _action1, _action2 = __action__(2)
-                msg = "Would any of you want to {}? Or maybe {}?".format(_action1, _action2)
-                print("Actions: {} and {}".format(_action1, _action2))
-
+                _suggestion = "Would any of you want to {}? Or maybe {}?".format(_action1, _action2)
+                print("Actions1: {}\nAction2: {}".format(_action1, _action2))
 
             for client in connected_clients:
-                sendSocketMsg(client, msg)  # Sends msg from host to clients
+                sendSocketMsg(client, _suggestion)  # Sends _suggestion from host to clients
                 sendSocketMsg(client, _action1)
                 sendSocketMsg(client, _action2)
 
-            record.add(msg)     # Add suggestion to record
-
+            record.add(_suggestion)     # Add suggestion to record
             _round = _round + 1
-            print("Round ", _round, " starts now!")
-            sleepy = 200
-            print("Sleeping in {} seconds".format(sleepy))
-            time.sleep(sleepy)
-
-
+            print("\nHost record:.............\n{}\nEnd of Record....................".format(record))
+            print("Round ", _round, " starts now!\n-----------------------------------")
+            print("Suggestion from host: {}".format(_suggestion))
+            while True:
+                time.sleep(10)
+                if "y" == input("New round?(y/n)"):
+                    break
+                else:
+                    print("Waiting")

@@ -59,12 +59,9 @@ while True:
 
             print("Print suggestion: ")
             print(_suggestion)
-
-
             _action1 = getSocketMsg(c, BUFSIZE)
             print("Action1 got: {}".format(_action1))
             _action2 = getSocketMsg(c, BUFSIZE)
-
             print("Action2 got: {}".format(_action2))
 
             """
@@ -74,7 +71,7 @@ while True:
             _response = callBot(name, _action1, _action2)  # Call bot, the bot will
             print("Print response: ")
             print(_response)
-            # sendSocketMsg(_response)    # Sends responds to host
+            sendSocketMsg(c, _response)    # Sends responds to host
             """
             ii. You can choose to remember the suggested action as alternative 1.
             """

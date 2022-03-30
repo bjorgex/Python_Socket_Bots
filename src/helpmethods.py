@@ -20,7 +20,6 @@ Sends message to a connected sockets
 def sendSocketMsg(_socket, msg):
     time.sleep(1)
     if msg == "None":
-        print("1 msg has None value")
         msg = "None"
 
     send_msg = msg.encode('utf-8')  # Encodes msg
