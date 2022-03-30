@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 from socket import *
-import bots
 from helpmethods import *
-
+import sys
 """
 The client will do the following:
 1. Create a TCP socket and connect to (ip, port)
@@ -17,24 +16,33 @@ c.connect(ADDRESS)  # Connects to host server and added in a list of connected c
 welc_mesg = getSocketMsg(c, BUFSIZE)  # Get welcome msg
 print(welc_mesg)
 run_loop = True
-no_name = True
+has_name = False
 failed_attempts = 0
 _bots = ["alice", "bob", "dora", "chuck"]
-name = ""
+
+name = str(sys.argv[1])
+print(name)
 while True:
-    while run_loop:
-        name = input("This clients name is: ")  # Pick which bot you want to use by name
+    while True:
         for bot in _bots:
             if bot == name:
                 run_loop = False
-                no_name = False
+                has_name = True
                 break
-        failed_attempts = failed_attempts + 1
+        if has_name:
+            break
+        else:
+            failed_attempts = failed_attempts + 1
+            name = input("Whatcha name dude??")
+
         if failed_attempts > 3:
+            print("To many failed attempts, closing client connection to server")
+            c.close()
+            run_loop = False
             break
     # End of loop
 
-    if not no_name:
+    if has_name:
         sendSocketMsg(c, name)  # Sends name to host
 
         """
@@ -45,19 +53,25 @@ while True:
         """
         while True:
             """Wait fro record list"""
+            print("Waiting for record")
             record = c.recv(BUFSIZE)  # Recives a record list, should say no messages yet when first recieved
             if not record:
-                print("Server disconnected")
+                print("Server disconnected from record.recv")
                 break
-            print("Print Record: ")
+            print("Print Record:........... ")
             print(record.decode('utf-8'))  # Prints record list
 
+            print("Waiting for suggestion")
             _suggestion = getSocketMsg(c, BUFSIZE)  # Get suggestion
-            if not _suggestion:
-                print("Server disconnected")
+            if _suggestion == "Q":
+                print("Server disconnected from suggestion.recv Q")
                 break
 
-            print("Print suggestion: ")
+            if not _suggestion:
+                print("Server disconnected from suggestion.recv")
+                break
+
+            print("\nPrint suggestion: ")
             print(_suggestion)
             _action1 = getSocketMsg(c, BUFSIZE)
             print("Action1 got: {}".format(_action1))
@@ -69,13 +83,13 @@ while True:
             over the socket.
             """
             _response = callBot(name, _action1, _action2)  # Call bot, the bot will
-            print("Print response: ")
+            print("\nPrint response: ")
             print(_response)
-            sendSocketMsg(c, _response)    # Sends responds to host
+            sendSocketMsg(c, _response)  # Sends responds to host
             """
             ii. You can choose to remember the suggested action as alternative 1.
             """
-            # _alt1 = _action
+
         """
         b. If the line is from one of the other participants, you can choose to ignore it,
         or pass it to your bot as alternative 2 if there's already a suggested action.
@@ -85,7 +99,5 @@ while True:
         messages (optional)
         """
         c.close()
-    else:
-        print("To many failed attempts, closing client connection to server")
-        c.close()
         break
+    break

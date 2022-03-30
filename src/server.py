@@ -30,6 +30,18 @@ from chatrecord import ChatRecord
 from bots import __action__
 from helpmethods import *
 import random
+import signal
+import time
+import os
+import sys
+
+def handler(signum, frame):
+    res = input("Ctrl-c was pressed. Do you really want to exit? y/n ")
+    if res == 'y':
+        exit(1)
+
+
+signal.signal(signal.SIGINT, handler)
 
 
 class ClientHandler(Thread):
@@ -47,7 +59,8 @@ class ClientHandler(Thread):
 
         self._name = getSocketMsg(self._client, BUFSIZE)        # Gets client name and decodes it
         if not self._name:
-            print("Client disconnected")
+            print("Client disconnected fomr handler")
+            print("Remove client from connected clients")
             connected_clients.remove(self._client)
             self._client.close()
             exit()
@@ -70,6 +83,7 @@ class ClientHandler(Thread):
             else:
                 _response = self._name + ' ' + ctime() + ': \n' + _response
                 self._record.add(_response)
+                recordAll.add(_response)
                 self._client.send(str(self._record).encode('utf-8'))
 
 
@@ -77,7 +91,7 @@ HOST = 'localhost'
 PORT = 5000
 ADDRESS = (HOST, PORT)
 BUFSIZE = 1024
-
+recordAll = ChatRecord()
 record = ChatRecord()
 server = socket(AF_INET, SOCK_STREAM)
 server.bind(ADDRESS)
@@ -89,7 +103,7 @@ while True:
     else:
         print("Error: Wrong input input. Only integers are accepted")
 
-server.listen()
+server.listen(cRoof)
 
 connected_clients = []  # List of all connected clients
 clientNamesReceived = []
@@ -109,48 +123,55 @@ while True:
     time.sleep(2)
     # Appends client name to connected clients
     connected_clients.append(client)
-    if len(connected_clients) == cRoof:
+
+    while len(connected_clients) == cRoof:
         print("Enough clients have joined the chat room \n")
+        """Wait for all clients to have sent their name"""
+        print("Retrieving bot names")
+        while len(clientNamesReceived) != cRoof:
+            """Loops around until client names are received"""
+            print("Need to retrieve", cRoof - len(clientNamesReceived), "more bot names")  # This should be removed or changed for finished code
+            time.sleep(5)
+            if not len(clientNamesReceived) < cRoof:
+                break
+
+        print("\nAll names received")
+        print("Sending suggestion")
+        # Picks either one or two actions, if only one is chosen, _action2 will = null
+        _rand = random.choice([1, 2])
+
+        if _rand == 1:
+            _action1 = __action__(1)
+            _action2 = "None"
+            _suggestion = "Would any of you want to {}?".format(_action1)
+            print("Action1: {}\nAction2: None".format(_action1))
+        else:
+            _action1, _action2 = __action__(2)
+            _suggestion = "Would any of you want to {}? Or maybe {}?".format(_action1, _action2)
+            print("Actions1: {}\nAction2: {}".format(_action1, _action2))
+
+        _round = _round + 1
+        print("Round ", _round, " starts now!\n-----------------------------------")
+        print("Suggestion from host: {}".format(_suggestion))
+
+        for client in connected_clients:
+            sendSocketMsg(client, _suggestion)  # Sends _suggestion from host to clients
+            sendSocketMsg(client, _action1)
+            sendSocketMsg(client, _action2)
+
+        time.sleep(5)
+        print("\nHost record:.............\n{}\nEnd of Record....................".format(recordAll))
+
         while True:
-            """Wait for all clients to have sent their name"""
-            print("Retrieving bot names")
-            while len(clientNamesReceived) != cRoof:
-                """Loops around until clients are received"""
-                print("Need to retrieve", cRoof - len(clientNamesReceived), "more bot names")  # This should be removed or changed for finished code
-                time.sleep(5)
-                if not len(clientNamesReceived) < cRoof:
-                    break
-            ##if len(clientNamesReceived) != cRoof:
-            ##    break
-
-            print("\nAll names received")
-            print("Sending suggestion")
-            # Picks either one or two actions, if only one is chosen, _action2 will = null
-            _rand = random.choice([1, 2])
-
-            if _rand == 1:
-                _action1 = __action__(1)
-                _action2 = "None"
-                _suggestion = "Would any of you want to {}?".format(_action1)
-                print("Action1: {}\nAction2: None".format(_action1))
+            _choise = input("New round(R)? - Quit server(Q)\n"
+                            "Write either R or Q here to choose: ")
+            if _choise == "R":
+                break
+            elif _choise == "Q":
+                for client in connected_clients:
+                    sendSocketMsg(client, "Q")
+                server.close()
+                sys.exit("Quit chat bot")
             else:
-                _action1, _action2 = __action__(2)
-                _suggestion = "Would any of you want to {}? Or maybe {}?".format(_action1, _action2)
-                print("Actions1: {}\nAction2: {}".format(_action1, _action2))
+                print("Error: Wrong input, try again!")
 
-            for client in connected_clients:
-                sendSocketMsg(client, _suggestion)  # Sends _suggestion from host to clients
-                sendSocketMsg(client, _action1)
-                sendSocketMsg(client, _action2)
-
-            record.add(_suggestion)     # Add suggestion to record
-            _round = _round + 1
-            print("\nHost record:.............\n{}\nEnd of Record....................".format(record))
-            print("Round ", _round, " starts now!\n-----------------------------------")
-            print("Suggestion from host: {}".format(_suggestion))
-            while True:
-                time.sleep(10)
-                if "y" == input("New round?(y/n)"):
-                    break
-                else:
-                    print("Waiting")
