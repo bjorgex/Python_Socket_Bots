@@ -29,6 +29,7 @@ from time import ctime
 from chatrecord import ChatRecord
 from bots import __action__
 from helpmethods import *
+import random
 
 
 class ClientHandler(Thread):
@@ -43,7 +44,15 @@ class ClientHandler(Thread):
     def run(self):
         msg = "Welcome to the chat room!"                       # welcome msg
         sendSocketMsg(self._client, msg)                        # Sends welcome msg
+
         self._name = getSocketMsg(self._client, BUFSIZE)        # Gets client name and decodes it
+        if not self._name:
+            print("Client disconnected")
+            connected_clients.remove(self._client)
+            self._client.close()
+
+            exit()
+
         print("Client name received: {}".format(self._name))    # Prints to client name to console
         clientNamesRecieved.append(self._name)                  # When enough clients names have been added, this will break the loop in server.py
         record_msg = str(self._record).encode('utf-8')          # Encodes the record list
@@ -100,29 +109,39 @@ while True:
             while len(clientNamesRecieved) != cRoof:
                 """Loops around until clients are recieved"""
                 print("Need to receive ", cRoof - len(clientNamesRecieved), " more bot names")
-                time.sleep(5)
+                time.sleep(10)
+                if len(clientNamesRecieved) != cRoof:
+                    break
+            if len(clientNamesRecieved) != cRoof:
+                break
 
             print("All names recieved")
             print("Sending suggestion")
             # Picks either one or two actions, if only one is choosen, _action2 will = null
-            _action1, _action2 = __action__()
-            print(_action1, " And ",_action2)
-            # Create suggestion with the actions
-            if not _action2:
-                msg = "Would any of you want to {}?".format(_action1)
-            else:
-                msg = "Would any of you want to {}? Or maybe {}?".format(_action1, _action2)
+            _rand = random.choice([1, 2])
 
-            record.add(msg)     # Add suggestion to record
+            if _rand == 1:
+                _action1 = __action__(1)
+                _action2 = "None"
+                msg = "Would any of you want to {}?".format(_action1)
+                print("Action: {}".format(_action1))
+            else:
+                _action1, _action2 = __action__(2)
+                msg = "Would any of you want to {}? Or maybe {}?".format(_action1, _action2)
+                print("Actions: {} and {}".format(_action1, _action2))
+
 
             for client in connected_clients:
                 sendSocketMsg(client, msg)  # Sends msg from host to clients
                 sendSocketMsg(client, _action1)
                 sendSocketMsg(client, _action2)
 
+            record.add(msg)     # Add suggestion to record
+
             _round = _round + 1
             print("Round ", _round, " starts now!")
-
-            time.sleep(10)
+            sleepy = 200
+            print("Sleeping in {} seconds".format(sleepy))
+            time.sleep(sleepy)
 
 

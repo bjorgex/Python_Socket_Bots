@@ -4,22 +4,21 @@ bad_verbs = ["fight", "bicker", "yell", "complain", "cry"]
 good_verbs = ["sing", "play", "work", "play", "eat", "sleep"]
 
 
-def __action__():
+def __action__(NrOfActions):
     verbs = [bad_verbs, good_verbs]
     bad_good = random.choice(verbs)
     a = random.choice(bad_good)
-    # Will loop until a and b are not the same verb
-    while True:
-        bad_good = random.choice(verbs)
-        b = random.choice(bad_good)
-        if b != a:
-            break
-    # End of loop
-
-    c = random.choice([1, 2])
-    if c == 1:
-        return a, None
+    if NrOfActions == 1:
+        return a
     else:
+
+        # Will loop until a and b are not the same verb
+        while True:
+            bad_good = random.choice(verbs)
+            b = random.choice(bad_good)
+            if b != a:
+                break
+        # End of loop
         return a, b
 
 
