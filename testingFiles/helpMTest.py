@@ -1,5 +1,5 @@
 from socket import *
-from bots import *
+from botsTest import *
 
 """
 Gets socket message from host/client decodes it and prints it out

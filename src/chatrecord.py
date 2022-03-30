@@ -9,6 +9,6 @@ class ChatRecord(object):
 
     def __str__(self):
         if len(self.data) == 0:
-            return 'No messages yet!'
+            return "No messages yet!"
         else:
             return '\n'.join(self.data)

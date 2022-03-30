@@ -22,7 +22,7 @@ or other users can interact with the bots and make the dialogue more interesting
 options, but your defaults should work well without user interaction. Don't make them fill out
 forms
 """
-
+import time
 from socket import *
 from threading import Thread
 from time import ctime
@@ -41,27 +41,27 @@ class ClientHandler(Thread):
         self._record = record
 
     def run(self):
-        msg = "Welcome to the chat room!".encode('utf-8')       # Encodes the welcome msg
-        self._client.send(msg)                                  # Sends welcome msg
-        print("Welcome message sent")                           # Prints to console
-        name = self._client.recv(BUFSIZE)                       # Receive name of the client chosen bot
-        self._name = name.decode('utf-8')                       # Client name decoded
+        msg = "Welcome to the chat room!"                       # welcome msg
+        sendSocketMsg(self._client, msg)                        # Sends welcome msg
+        self._name = getSocketMsg(self._client, BUFSIZE)        # Gets client name and decodes it
         print("Client name received: {}".format(self._name))    # Prints to client name to console
+        clientNamesRecieved.append(self._name)                  # When enough clients names have been added, this will break the loop in server.py
         record_msg = str(self._record).encode('utf-8')          # Encodes the record list
         self._client.send(record_msg)                           # Sends the record list to client
         print("Server sent record list to client")
         #########################################
         while True:
-            message = self._client.recv(BUFSIZE)                # Recives message from bot
-            print("Recieved message from client")
-            if not message:
+            """Waits for response from client"""
+            _response = getSocketMsg(self._client, BUFSIZE)               # Receives message from bot
+            print("Dont og past")
+            if not _response:
                 print("Client disconnected")
-                connected_clients.remove(client)
+                connected_clients.remove(self._client)
                 self._client.close()
                 break
             else:
-                message = self._name.decode('utf-8') + ' ' + ctime() + '\n' + message.decode('utf-8')
-                self._record.add(message)
+                _response = self._name + ' ' + ctime() + '\n' + _response
+                self._record.add(_response)
                 self._client.send(str(self._record).encode('utf-8'))
 
 
@@ -74,9 +74,10 @@ record = ChatRecord()
 server = socket(AF_INET, SOCK_STREAM)
 server.bind(ADDRESS)
 cRoof = 1
-server.listen(cRoof)
-"""List of all connected clients"""
-connected_clients = []
+server.listen(2)
+
+connected_clients = []  # List of all connected clients
+clientNamesRecieved = []
 _round = 0
 """
 The server now waits for connections from clients,
@@ -87,17 +88,41 @@ while True:
     print('Waiting for connections...')
     print("There are " + str(len(connected_clients)) + " connected clients")
     client, address = server.accept()
-
     print('... connected from: ', address)
     handler = ClientHandler(client, record)
     handler.start()
-    connected_clients.append(client)               # Appends client name to connected clients
-    if connected_clients == cRoof:
-        print("if state")
-        # Pick your own action or a random one
-        _action = __action__()
-        # Add the initial statement to record
-        message = "Would any of you want to {}?".format(_action)
-        record.add(message)
-        # Send statement to clients
-        server.send(_action.encode('utf-8'))
+    # Appends client name to connected clients
+    connected_clients.append(client)
+    if len(connected_clients) == cRoof:
+        print("cRoof reached \n")
+        while True:
+            """Wait for all clients to have sent their name"""
+            while len(clientNamesRecieved) != cRoof:
+                """Loops around until clients are recieved"""
+                print("Need to receive ", cRoof - len(clientNamesRecieved), " more bot names")
+                time.sleep(5)
+
+            print("All names recieved")
+            print("Sending suggestion")
+            # Picks either one or two actions, if only one is choosen, _action2 will = null
+            _action1, _action2 = __action__()
+            print(_action1, " And ",_action2)
+            # Create suggestion with the actions
+            if not _action2:
+                msg = "Would any of you want to {}?".format(_action1)
+            else:
+                msg = "Would any of you want to {}? Or maybe {}?".format(_action1, _action2)
+
+            record.add(msg)     # Add suggestion to record
+
+            for client in connected_clients:
+                sendSocketMsg(client, msg)  # Sends msg from host to clients
+                sendSocketMsg(client, _action1)
+                sendSocketMsg(client, _action2)
+
+            _round = _round + 1
+            print("Round ", _round, " starts now!")
+
+            time.sleep(10)
+
+
