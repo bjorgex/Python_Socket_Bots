@@ -39,7 +39,11 @@ if arg_count > 0:
     parser = argparse.ArgumentParser(
         description='''My Description. This script only uses one optionoal argument''',
         epilog='''This is all the help you'll get''')
-    parser.add_argument('String', type=str, default=42, help=''' 
+    parser.add_argument('IP', type=str, default=42, help='''
+    This argument takes an IP address like for exampler: 192.168.30.172.''')
+    parser.add_argument('PORT', type=int, default=42, help='''
+    This argument takes an PORT number in 0-65535, but preferably use 5000 adn up''')
+    parser.add_argument('Bot name', type=str, default=42, help=''' 
         You can choose to enter a name of one the bots that the client have as an argument after the script name.
         This will decide which bot that corresponds to this client''')
     args = parser.parse_args()
@@ -59,18 +63,19 @@ def handler(signum, frame):
 
 
 signal.signal(signal.SIGINT, handler)
-IP = '192.168.30.172'
+IP = sys.argv[1]
 HOST = IP
-PORT = 5000
+PORT = int(sys.argv[2])
 ADDRESS = (HOST, PORT)
+print("Host socket: {}".format(ADDRESS))
 BUFSIZE = 1024*2
 c = socket(AF_INET, SOCK_STREAM)  # TCP socket for IPv4
 
 has_name = False
 failed_attempts = 0
 _bots = ["alice", "bob", "dora", "chuck"]
-
-name = doesSysArg1Exist()
+print("Choose between theese bots: {}".format(_bots))
+name = doesSysArg3Exist()
 print(name)
 while True:
     for bot in _bots:

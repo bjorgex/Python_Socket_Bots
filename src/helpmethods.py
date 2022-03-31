@@ -65,9 +65,13 @@ def callBot(botName, ac1, ac2):
     return _response
 
 
-def doesSysArg1Exist():
+def doesSysArg3Exist():
+    """
+    This function is used for client.py script to get name
+    :return:
+    """
     try:
-        arg1 = sys.argv[1]
+        arg1 = sys.argv[3]
     except IndexError:
         print("No arguments")
     else:

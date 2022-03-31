@@ -47,6 +47,7 @@ if arg_count > 0:
         You can choose to enter a integer as an argument after the script name.
         This will decide how many clients that have to join, before the host
         starts looking for client names. Negative arguments will be transformed to positives''')
+    parser.add_argument('INTEGER', type=int, default=42, help='''Add a port number here ''')
     args = parser.parse_args()
     """Argument description finished"""
 
@@ -127,9 +128,10 @@ class ClientHandler(Thread):
 Creating hosts server
 """
 IP = getLocalIP()
-print(IP)
-HOST = IP                      # Initialize server address
-PORT = 5000                             # Initialize server port
+HOST = IP                               # Initialize server address
+arg2 = int(sys.argv[2])
+PORT = arg2                             # Initialize server port
+print("Host address: {}\nPort number: {}".format(HOST, PORT))
 ADDRESS = (HOST, PORT)                  # Puts address and port together
 BUFSIZE = 1024                          # The block size in bytes
 hostRecord = ChatRecord()               # Initialize the host record
@@ -146,8 +148,8 @@ Handles sys.arg for client number
 clientNrRoof = False
 choose_zero_clients = 0
 if arg_count > 0:
-    arg1 = int(sys.argv[1])  # Finds the absolute value of cl
-    arg1_abs = int(math.sqrt(arg1 ** 2))
+    arg1 = int(sys.argv[1])
+    arg1_abs = int(math.sqrt(arg1 ** 2))    # Finds the absolute value of cl
     clientNrRoof = arg1_abs
     if isClientArgZero(clientNrRoof, choose_zero_clients):
         clientNrRoof = False
