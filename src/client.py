@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import argparse
+import signal
 from socket import *
 from helpmethods import *
 import sys
@@ -6,16 +8,64 @@ import sys
 The client will do the following:
 1. Create a TCP socket and connect to (ip, port)
 """
+
+arg_count = 0
+if __name__ == "__main__":
+    """
+    Program arguments
+        # Logic for how to handle the script arguments
+        # Since we only want 1 argument we'll just check how many arguments is given
+        # IF a user gives 2 arguments an error will occur 
+        Source:
+        https://realpython.com/python-command-line-arguments/
+    """
+    arg_count = len(sys.argv) - 1
+    print(f"Arguments count: {arg_count}")
+
+"""If there are no arguments like -h or an 'Integer', this if statement will be skipped"""
+if arg_count > 0:
+    """
+    Argument description  
+        # Lets you pass the argument --help,
+        # to show you what other arguments you can use
+        # in this script
+        
+        Source:
+        https://stackoverflow.com/questions/9037828/writing-a-help-for-python-script
+        ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+        VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+    """
+    """Start of argument description"""
+    parser = argparse.ArgumentParser(
+        description='''My Description. This script only uses one optionoal argument''',
+        epilog='''This is all the help you'll get''')
+    parser.add_argument('String', type=str, default=42, help=''' 
+        You can choose to enter a name of one the bots that the client have as an argument after the script name.
+        This will decide which bot that corresponds to this client''')
+    args = parser.parse_args()
+    """Argument description finished"""
+
+
+def handler(signum, frame):
+    """
+    Traps
+    # signal.SIGINT handles ctrl + c interrupts
+    Source:
+    https://code-maven.com/catch-control-c-in-python
+    """
+    res = input("Ctrl-c was pressed. Do you really want to exit? y/n ")
+    if res == 'y':
+        exit(1)
+
+
+signal.signal(signal.SIGINT, handler)
+
 HOST = 'localhost'
 PORT = 5000
 ADDRESS = (HOST, PORT)
-BUFSIZE = 1024
+BUFSIZE = 1024*2
 c = socket(AF_INET, SOCK_STREAM)  # TCP socket for IPv4
-c.connect(ADDRESS)  # Connects to host server and added in a list of connected clients
 
-welc_mesg = getSocketMsg(c, BUFSIZE)  # Get welcome msg
-print(welc_mesg)
-run_loop = True
 has_name = False
 failed_attempts = 0
 _bots = ["alice", "bob", "dora", "chuck"]
@@ -23,52 +73,51 @@ _bots = ["alice", "bob", "dora", "chuck"]
 name = doesSysArg1Exist()
 print(name)
 while True:
-    while True:
-        for bot in _bots:
-            if bot == name:
-                run_loop = False
-                has_name = True
-                break
-        if has_name:
+    for bot in _bots:
+        if bot == name:
+            has_name = True
             break
-        else:
-            failed_attempts = failed_attempts + 1
-            name = input("Whatcha name dude??")
+    if has_name:
+        break
+    else:
+        failed_attempts = failed_attempts + 1
+        name = input("Whatcha name dude??")
 
-        if failed_attempts > 3:
-            print("To many failed attempts, closing client connection to server")
-            c.close()
-            run_loop = False
-            break
-    # End of loop
+    if failed_attempts > 3:
+        print("To many failed attempts, closing client connection to server")
+        c.close()
+        break
+# End of loop
 
+try:
+    c.connect(ADDRESS)  # Connects to host server and added in a list of connected clients
+except ConnectionRefusedError:
+    sys.exit("Could not connect to host server")
+welcome_msg = getSocketMsg(c, BUFSIZE)  # Get welcome msg
+print(welcome_msg)
+
+while True:
     if has_name:
         sendSocketMsg(c, name)  # Sends name to host
 
-        """
-        2. Read from the socket, line by line.
-        a. If the line is from the host, you can expect it to be a suggestion, e.g. "Let's
-        take a walk" or "Why don't we sing?". Extract the suggested action from the
-        line. E.g. "walk" or "sing".
-        """
         while True:
             """Wait fro record list"""
             print("Waiting for record")
             record = c.recv(BUFSIZE)  # Recives a record list, should say no messages yet when first recieved
             if not record:
-                print("Server disconnected from record.recv")
+                print("Server disconnected because of not receiving record")
                 break
-            print("Print Record:........... ")
-            print(record.decode('utf-8'))  # Prints record list
-
+            print("\nPrint Record:...........\n{}\nPrint record end...........\n".format(record.decode('utf-8')))
             print("Waiting for suggestion")
-            _suggestion = getSocketMsg(c, BUFSIZE)  # Get suggestion
+            try:
+                _suggestion = getSocketMsg(c, BUFSIZE)  # Get suggestion
+            except ConnectionResetError:
+                sys.exit("Could not connect to host server, closing client")
             if _suggestion == "Q":
-                print("Server disconnected from suggestion.recv Q")
+                print("Server disconnected because it received a 'Q' from host")
                 break
-
             if not _suggestion:
-                print("Server disconnected from suggestion.recv")
+                print("Server disconnected from host")
                 break
 
             print("\nPrint suggestion: ")
@@ -78,26 +127,11 @@ while True:
             _action2 = getSocketMsg(c, BUFSIZE)
             print("Action2 got: {}".format(_action2))
 
-            """
-            i. Call the function bot to create a response. Send the response back
-            over the socket.
-            """
             _response = callBot(name, _action1, _action2)  # Call bot, the bot will
             print("\nPrint response: ")
             print(_response)
-            sendSocketMsg(c, _response)  # Sends responds to host
-            """
-            ii. You can choose to remember the suggested action as alternative 1.
-            """
+            sendSocketMsg(c, _response)  # Send responds to host
 
-        """
-        b. If the line is from one of the other participants, you can choose to ignore it,
-        or pass it to your bot as alternative 2 if there's already a suggested action.
-
-        3. You are free to decide how and when to end the connection.
-        4. sending a message that might be dropped if the client is not ready to receive
-        messages (optional)
-        """
         c.close()
         break
     break

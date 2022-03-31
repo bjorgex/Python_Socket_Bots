@@ -9,9 +9,13 @@ Gets socket message from host/client decodes it and prints it out
 
 
 def getSocketMsg(_socket, BUFSIZE):
-    get_msg = _socket.recv(BUFSIZE)  # Receives msg from host/client
-    msg = get_msg.decode('utf-8')  # Decodes msg
-    return msg
+    try:
+        get_msg = _socket.recv(BUFSIZE)  # Receives msg from host/client
+    except ConnectionResetError:
+        sys.exit("Couldn't connect to socket")
+    else:
+        msg = get_msg.decode('utf-8')  # Decodes msg
+        return msg
 
 
 """
@@ -21,11 +25,12 @@ Sends message to a connected sockets
 
 def sendSocketMsg(_socket, msg):
     time.sleep(1)
-    if msg == "None":
-        msg = "None"
-
-    send_msg = msg.encode('utf-8')  # Encodes msg
-    _socket.send(send_msg)  # Sends msg from host/client
+    try:
+        send_msg = msg.encode('utf-8')  # Encodes msg
+    except ConnectionResetError:
+        sys.exit("Couldn't connect to socket")
+    else:
+        _socket.send(send_msg)  # Sends msg from host/client
 
 
 def yes_no(Yes_or_no):

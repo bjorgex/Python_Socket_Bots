@@ -36,7 +36,7 @@ def dora(a, b=None):
     alternatives = ["coding", "singing", "sleeping", "fighting"]
     b = random.choice(alternatives)
     res = "Yea, {} is an option. Or we could do some {}.".format(a, b)
-    return res, b
+    return res
 
 
 def chuck(a, b=None):
