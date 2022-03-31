@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-
 from socket import *
+
 from threading import Thread
 from time import ctime
 from chatrecord import ChatRecord
@@ -126,7 +126,9 @@ class ClientHandler(Thread):
 """
 Creating hosts server
 """
-HOST = 'localhost'                      # Initialize server address
+IP = getLocalIP()
+print(IP)
+HOST = IP                      # Initialize server address
 PORT = 5000                             # Initialize server port
 ADDRESS = (HOST, PORT)                  # Puts address and port together
 BUFSIZE = 1024                          # The block size in bytes
@@ -232,9 +234,9 @@ while True:
             elif _choise == "Q":
                 for client in connected_clients:
                     sendSocketMsg(client, "Q")
-                    #client.close()
-                    client.detach()
+                    client.close()
                     time.sleep(1)
+                server.detach()
                 server.close()
                 sys.exit("Quit chat bot")
             else:

@@ -59,8 +59,8 @@ def handler(signum, frame):
 
 
 signal.signal(signal.SIGINT, handler)
-
-HOST = 'localhost'
+IP = '192.168.30.172'
+HOST = IP
 PORT = 5000
 ADDRESS = (HOST, PORT)
 BUFSIZE = 1024*2
@@ -103,7 +103,7 @@ while True:
         while True:
             """Wait fro record list"""
             print("Waiting for record")
-            record = c.recv(BUFSIZE)  # Recives a record list, should say no messages yet when first recieved
+            record = c.recv(BUFSIZE)  # Receives a record list, should say no messages yet when first recieved
             if not record:
                 print("Server disconnected because of not receiving record")
                 break

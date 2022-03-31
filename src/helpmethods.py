@@ -2,6 +2,17 @@ import sys
 
 import bots
 import time
+
+def getLocalIP():
+    """
+    Method to retunr your local IP address
+    Source:
+    https://www.delftstack.com/howto/python/get-ip-address-python/#use-the-socket-gethostname-function-to-get-the-local-ip-address-in-python
+    :return:
+    """
+    import socket
+    return socket.gethostbyname(socket.gethostname())
+
 """
 Gets socket message from host/client decodes it and prints it out
 
@@ -98,3 +109,4 @@ def isClientArgZero(isZero, thisFuncCalled):
     print("This isn't fun, try asking for more than zero clients.")
     time.sleep(2)
     return True
+
