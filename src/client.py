@@ -20,7 +20,7 @@ has_name = False
 failed_attempts = 0
 _bots = ["alice", "bob", "dora", "chuck"]
 
-name = str(sys.argv[1])
+name = doesSysArg1Exist()
 print(name)
 while True:
     while True:

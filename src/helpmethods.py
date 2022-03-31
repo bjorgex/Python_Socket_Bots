@@ -1,3 +1,5 @@
+import sys
+
 import bots
 import time
 """
@@ -45,3 +47,49 @@ def callBot(botName, ac1, ac2):
         ac2 = None
     _response = bot_to_call(ac1, ac2)
     return _response
+
+
+def doesSysArg1Exist():
+    try:
+        arg1 = sys.argv[1]
+    except IndexError:
+        print("No arguments")
+    else:
+        return arg1
+    return None
+
+
+def isClientArgPosInt(clientNrArg):
+    try:
+        _clientNr = int(clientNrArg)
+    except TypeError:
+        print("Client number argument/input not an integer")
+    else:
+        if _clientNr < 0:
+            print("Server only accepts numbers >= 0")
+            return False
+        else:
+            return _clientNr
+    return False
+
+
+def isClientArgZero(isZero, thisFuncCalled):
+    if isZero > 0:
+        return False
+    lonely_action = bots.__action__(1)
+    lonely_suggestion = "Host: Would any of you want to {}?".format(lonely_action)
+    print(lonely_suggestion)
+    time.sleep(3)
+    print("Any one there?")
+    time.sleep(2)
+    print("Wilson?")
+    time.sleep(4)
+    if thisFuncCalled >= 1:
+        print("Did you really start a server for 0 clients again?...")
+    else:
+        print("Did you really start a server for 0 clients?...")
+
+    time.sleep(2)
+    print("This isn't fun, try asking for more than zero clients.")
+    time.sleep(2)
+    return True

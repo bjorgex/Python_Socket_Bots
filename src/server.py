@@ -104,16 +104,34 @@ recordAll = ChatRecord()
 record = ChatRecord()
 server = socket(AF_INET, SOCK_STREAM)
 server.bind(ADDRESS)
-cRoof = 0
-while True:
-    cRoof = int(input("How many clients has to connect before the chat room host suggests something?: "))
-    if isinstance(cRoof, int):
-        break
-    else:
-        print("Error: Wrong input input. Only integers are accepted")
 
+cRoof = False
+choose_zero_clients = 0
+_sysArg1 = doesSysArg1Exist()
+if _sysArg1:
+    cRoof = isClientArgPosInt(_sysArg1)
+    # handel zero
+    _isZero = isClientArgZero(cRoof, choose_zero_clients)
+    if _isZero:
+        choose_zero_clients = choose_zero_clients + 1
+        cRoof = False
+
+while not cRoof:
+    _inputArg = "How many clients has to connect before the chat room host suggests something?: "
+    cRoof = isClientArgPosInt(input(_inputArg))
+    _isZero = isClientArgZero(cRoof, choose_zero_clients)
+    if _isZero:
+        cRoof = False
+
+# Handle 0
+
+# Only positive numbers under here
+
+
+print(cRoof)
+
+print("Waiting for {} clients...".format(cRoof))
 server.listen(cRoof)
-
 connected_clients = []  # List of all connected clients
 clientNamesReceived = []
 _round = 0
@@ -153,7 +171,7 @@ while True:
         if _rand == 1:
             _action1 = __action__(1)
             _action2 = "None"
-            _suggestion = "Would any of you want to {}?".format(_action1)
+            _suggestion = "Host: Would any of you want to {}?".format(_action1)
             print("Action1: {}\nAction2: None".format(_action1))
         else:
             _action1, _action2 = __action__(2)
